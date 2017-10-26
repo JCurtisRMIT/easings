@@ -1,5 +1,5 @@
 /**
- Penner Easing Functions: MaxMSP External
+ easefunc: MaxMSP External
  
  J.Curtis RMIT University 2017
  Industrial Design (Honours)
@@ -26,7 +26,7 @@
 
 typedef struct _easings
 {
-    t_object e_obj;
+    t_object    e_obj;
     double		e_val0;
     long		e_val1;
     long        e_val2;
@@ -37,6 +37,7 @@ typedef struct _easings
     double      g_dval;
     t_object    *s_ui;
     void		*outlet;
+    void        *outlet1;
 } t_easings;
 
 
@@ -47,10 +48,9 @@ void easings_assist(t_easings *x, void *b, long m, long a, char *s);
 void easings_bang(t_easings *x);
 void easings_ft1(t_easings *x, double ga);
 void easings_ft2(t_easings *x, double gb);
-void easings_in3(t_easings *x, long gn);
-void easings_ft4(t_easings *x, double gc);
-void easings_ft5(t_easings *x, double gd);
-void easings_in6(t_easings *x, long n);
+void easings_ft3(t_easings *x, double gc);
+void easings_ft4(t_easings *x, double gd);
+void easings_in5(t_easings *x, long gn);
 void easings_float(t_easings *x, double f);
 //void easings_free(t_easings) // frees up proxy inlet
 
@@ -69,19 +69,20 @@ void ext_main(void *r)
 {
     t_class *c;
     
-    c = class_new("easingv1", (method)easings_new, (method)NULL, sizeof(t_easings), 0L, 0);
+    c = class_new("easings", (method)easings_new, (method)NULL, sizeof(t_easings), 0L, 0);
     class_addmethod(c, (method)easings_bang,    "bang",   0);
     //class_addmethod(c, (method)easings_int,     "int",    A_LONG, 0);
     class_addmethod(c, (method)easings_float,   "float",  A_FLOAT, 0);
+    class_addmethod(c, (method)easings_float,   "float",  A_FLOAT, 0);
+    
     class_addmethod(c, (method)easings_assist,  "assist", A_CANT, 0);
     class_addmethod(c, (method)easings_notify,  "notify", A_CANT, 0);
     
     class_addmethod(c, (method)easings_ft1, "ft1", A_FLOAT, 0); // Levin 'a'
     class_addmethod(c, (method)easings_ft2, "ft2", A_FLOAT, 0); // Levin 'b'
-    class_addmethod(c, (method)easings_in3, "in3", A_LONG, 0); // Levin 'n'
-    class_addmethod(c, (method)easings_ft4, "ft4", A_FLOAT, 0); // Levin 'c'
-    class_addmethod(c, (method)easings_ft5, "ft5", A_FLOAT, 0); // Levin 'd'
-    class_addmethod(c, (method)easings_in6, "in6", A_LONG, 0); // Algo/Attr change
+    class_addmethod(c, (method)easings_ft3, "ft3", A_FLOAT, 0); // Levin 'c'
+    class_addmethod(c, (method)easings_ft4, "ft4", A_FLOAT, 0); // Levin 'd'
+    class_addmethod(c, (method)easings_in5, "in5", A_LONG, 0); // Levin 'n'
     
     CLASS_ATTR_LONG(c, "easing", 0, t_easings, e_val1);
     CLASS_ATTR_CATEGORY(c, "easing", 0, "Easings");
@@ -110,14 +111,14 @@ void *easings_new(t_symbol *s, long argc, t_atom *argv)
     
     x = (t_easings *)object_alloc(easings_class); // create a new instance of this object
     
-    intin(x, 6); // new inlet for algo change
-    floatin(x, 5); // new inlet for levin 'd'
-    floatin(x, 4); // new inlet for levin 'c'
-    intin(x, 3); // new inlet for levin 'n'
+    intin(x, 5); // new inlet for levin 'n'
+    floatin(x, 4); // new inlet for levin 'd'
+    floatin(x, 3); // new inlet for levin 'c'
     floatin(x, 2); // new inlet for levin 'b'
     floatin(x, 1); // new inlet for levin 'a'
     
     x->outlet = floatout((t_easings *)x); // create a float outlet
+    //x->outlet1 = floatout((t_easings *)x); // create second float outlet
     
     x->e_val0 = 0; // set initial left inlet value to zero
     x->e_val1 = 0; // set initial left inlet value to (not: variable set by arguments edit: do this)
@@ -155,16 +156,13 @@ void easings_assist(t_easings *x, void *b, long m, long a, char *s)
                 sprintf(s, "inlet %ld: 'b' (levin algos only) normalised float 0.0 - 1.0", a);
                 break;
             case 3:
-                sprintf(s, "inlet %ld: 'n' (levin algos only) integer 1-20", a);
-                break;
-            case 4:
                 sprintf(s, "inlet %ld: 'c' (levin algos only) normalised float 0.0 - 1.0", a);
                 break;
-            case 5:
+            case 4:
                 sprintf(s, "inlet %ld: 'd' (levin algos only) normalised float 0.0 - 1.0", a);
                 break;
-            case 6:
-                sprintf(s, "inlet %ld: integer 0-61 selects easing algorithm", a);
+            case 5:
+                sprintf(s, "inlet %ld: 'n' (levin algos only) integer 1-20", a);
                 break;
 
         }
@@ -425,6 +423,7 @@ t_max_err easings_notify(t_easings *x, t_symbol *s, t_symbol *msg, void *sender,
             case 58: {
                 post("Circular Arc Through A Given Point");
                 post("use variables 'a' & 'b' to shape");
+                post("NOT FINISHED!");
                 break;
             }
             case 59: {
@@ -1654,37 +1653,32 @@ void easings_float(t_easings *x, double f)
 void easings_ft1(t_easings *x, double ga)
 {
     x->g_aval = ga;
-    post("a=%.6f", ga);
+    //post("a=%.6f", ga);
 }
 
 void easings_ft2(t_easings *x, double gb)
 {
     x->g_bval = gb;
-    post("b=%.6f", gb);
+    //post("b=%.6f", gb);
 }
 
-void easings_in3(t_easings *x, long gn)
-{
-    x->g_nval = gn;
-    post("easing: %ld", gn);
-}
 
-void easings_ft4(t_easings *x, double gc)
+void easings_ft3(t_easings *x, double gc)
 {
     x->g_cval = gc;
-    post("c=%.6f", gc);
+    //post("c=%.6f", gc);
 }
 
-void easings_ft5(t_easings *x, double gd)
+void easings_ft4(t_easings *x, double gd)
 {
     x->g_dval = gd;
-    post("d=%.6f", gd);
+    //post("d=%.6f", gd);
 }
 
-void easings_in6(t_easings *x, long n)
+void easings_in5(t_easings *x, long gn)
 {
-    x->e_val1 = n;
-    post("easing: %ld", n);
+    x->g_nval = gn;
+    //post("easing: %ld", gn);
 }
 
 
