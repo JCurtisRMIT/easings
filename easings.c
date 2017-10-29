@@ -35,6 +35,8 @@ typedef struct _easings
     long        g_nval;
     double      g_cval;
     double      g_dval;
+    
+    
     t_object    *s_ui;
     void		*outlet;
     void        *outlet1;
@@ -53,11 +55,33 @@ void easings_ft4(t_easings *x, double gd);
 void easings_in5(t_easings *x, long gn);
 void easings_float(t_easings *x, double f);
 //void easings_free(t_easings) // frees up proxy inlet
+//void easings_message(t_easings *x, t_symbol *s, long argc, t_atom *argv);
+//void easings_anything(t_easings *x, t_symbol *s, long argc, t_atom *argv);
+
+
 
 
 t_max_err easings_setattr_expr(t_easings *x, void *attr, long ac, t_atom *av);
 t_max_err easings_getattr_expr(t_easings *x, void *attr, long ac, t_atom *av);
 t_max_err easings_notify(t_easings *x, t_symbol *s, t_symbol *msg, void *sender, void *data, long ac, t_atom *av);
+
+
+double circularArcThroughAPoint (double x, double a, double b);
+Boolean IsPerpendicular(
+                        double pt1x, double pt1y,
+                        double pt2x, double pt2y,
+                        double pt3x, double pt3y);
+
+
+double      m_Centerx;
+double      m_Centery;
+double      m_dRadius;
+void calcCircleFrom3Points (
+                            double pt1x, double pt1y,
+                            double pt2x, double pt2y,
+                            double pt3x, double pt3y);
+
+
 
 
 t_class *easings_class;
@@ -73,7 +97,7 @@ void ext_main(void *r)
     class_addmethod(c, (method)easings_bang,    "bang",   0);
     //class_addmethod(c, (method)easings_int,     "int",    A_LONG, 0);
     class_addmethod(c, (method)easings_float,   "float",  A_FLOAT, 0);
-    class_addmethod(c, (method)easings_float,   "float",  A_FLOAT, 0);
+    //class_addmethod(c, (method)easings_float,   "float",  A_FLOAT, 0);
     
     class_addmethod(c, (method)easings_assist,  "assist", A_CANT, 0);
     class_addmethod(c, (method)easings_notify,  "notify", A_CANT, 0);
@@ -84,17 +108,36 @@ void ext_main(void *r)
     class_addmethod(c, (method)easings_ft4, "ft4", A_FLOAT, 0); // Levin 'd'
     class_addmethod(c, (method)easings_in5, "in5", A_LONG, 0); // Levin 'n'
     
+    //class_addmethod(c, (method)easings_anything, "anything", A_GIMME, 0);
+    
     CLASS_ATTR_LONG(c, "easing", 0, t_easings, e_val1);
     CLASS_ATTR_CATEGORY(c, "easing", 0, "Easings");
     
     CLASS_ATTR_ORDER(c, "easing", 0, "1");
     CLASS_ATTR_LABEL(c, "easing", 0, "Easing Function");
     
-    CLASS_ATTR_ENUMINDEX(c, "easing", 0, "\"Linear(No Easing)\" Quad(EaseIn) Quad(EaseOut) Quad(EaseInOut) Quad(EaseOutIn) Cubic(EaseIn) Cubic(EaseOut) Cubic(EaseInOut) Cubic(EaseOutIn) Quart(EaseIn) Quart(EaseOut) Quart(EaseInOut) Quart(EaseOutIn) Quint(EaseIn) Quint(EaseOut) Quint(EaseInOut) Quint(EaseOutIn) Sine(EaseIn) Sine(EaseOut) Sine(EaseInOut) Sine(EaseOutIn) Circ(EaseIn) Circ(EaseOut) Circ(EaseInOut) Circ(EaseOutIn) Expo(EaseIn) Expo(EaseOut) Expo(EaseInOut) Expo(EaseOutIn) Back(EaseIn) Back(EaseOut) Back(EaseInOut) Back(EaseOutIn) Bounce(EaseIn) Bounce(EaseOut) Bounce(EaseInOut) Bounce(EaseOutIn) Elastic(EaseIn) Elastic(EaseOut) Elastic(EaseInOut) Elastic(EaseOutIn) \"Blinn-Wyvill Cosine Approx\" \"Double-Cubic Seat\" \"Double-Cubic Seat with Linear Bend\" \"Double-Odd-Polynomial Seat\" \"Symmetric Double-Polynomial Sigmoids\" \"Quadratic Through a Given Point\" \"Exponential Emphasis\" \"Double-Exponential Seat\" \"Double-Exponential Sigmoid\" \"Modified Logistic Sigmoid\" \"Circular Ease In\" \"Circular Ease Out\" \"Double-Circular Seat\" \"Double-Circular Sigmoid\" \"Double-Elliptic Seat\" \"Double-Elliptic Sigmoid\" \"Double-Linear with Circular Fillet\" \"Circular Arc Through A Given Point\" \"Quadtratic Bezier\" \"Cubic Bezier\" \"Cubic Bezier (Nearly) Through Two Given Points\"  ");
+    CLASS_ATTR_ENUMINDEX(c, "easing", 0, "\"Linear(No Easing)\" Quadratic(EaseIn) Quadratic(EaseOut) Quadratic(EaseInOut) Quadratic(EaseOutIn) Cubic(EaseIn) Cubic(EaseOut) Cubic(EaseInOut) Cubic(EaseOutIn) Quartic(EaseIn) Quartic(EaseOut) Quartic(EaseInOut) Quartic(EaseOutIn) Quintic(EaseIn) Quintic(EaseOut) Quintic(EaseInOut) Quintic(EaseOutIn) Sine(EaseIn) Sine(EaseOut) Sine(EaseInOut) Sine(EaseOutIn) Circular(EaseIn) Circular(EaseOut) Circular(EaseInOut) Circular(EaseOutIn) Exponential(EaseIn) Exponential(EaseOut) Exponential(EaseInOut) Exponential(EaseOutIn) Back(EaseIn) Back(EaseOut) Back(EaseInOut) Back(EaseOutIn) Bounce(EaseIn) Bounce(EaseOut) Bounce(EaseInOut) Bounce(EaseOutIn) Elastic(EaseIn) Elastic(EaseOut) Elastic(EaseInOut) Elastic(EaseOutIn) \"Blinn-Wyvill Cosine Approx\" \"Double-Cubic Seat (a, b)\" \"Double-Cubic Seat with Linear Blend (a, b)\" \"Double-Odd-Polynomial Seat (a, b, n)\" \"Symmetric Double-Polynomial Sigmoids (a, b, n)\" \"Quadratic Through a Given Point (a, b)\" \"Exponential Emphasis (a)\" \"Double-Exponential Seat (a)\" \"Double-Exponential Sigmoid (a)\" \"Modified Logistic Sigmoid (a)\" \"Circular Ease In\" \"Circular Ease Out\" \"Double-Circular Seat (a)\" \"Double-Circular Sigmoid (a)\" \"Double-Elliptic Seat (a, b)\" \"Double-Elliptic Sigmoid (a, b)\" \"Double-Linear with Circular Fillet (a, b, d)\" \"Circular Arc Through A Given Point (a, b)\" \"Quadtratic Bezier (a, b)\" \"Cubic Bezier (a, b, c, d)\" \"Cubic Bezier (Nearly) Through Two Given Points (a, b, c, d)\"  ");
     CLASS_ATTR_SAVE(c, "easing", 0);
     CLASS_ATTR_SELFSAVE(c, "easing", 0);
     //CLASS_ATTR_ACCESSORS(c, "easing", (method)easings_getattr_expr, (method)easings_setattr_expr);
     
+    CLASS_ATTR_DOUBLE(c, "a", 0, t_easings, g_aval);
+    CLASS_ATTR_FILTER_CLIP(c, "a", 0.0, 1.0);
+    //CLASS_ATTR_LABEL(c, "a", 0, "dynamicvars");
+    CLASS_ATTR_DOUBLE(c, "b", 0, t_easings, g_bval);
+    CLASS_ATTR_FILTER_CLIP(c, "b", 0.0, 1.0);
+    //CLASS_ATTR_LABEL(c, "b", 0, "dynamicvars");
+    CLASS_ATTR_DOUBLE(c, "c", 0, t_easings, g_cval);
+    CLASS_ATTR_FILTER_CLIP(c, "c", 0.0, 1.0);
+    //CLASS_ATTR_LABEL(c, "c", 0, "dynamicvars");
+    CLASS_ATTR_DOUBLE(c, "d", 0, t_easings, g_dval);
+    CLASS_ATTR_FILTER_CLIP(c, "d", 0.0, 1.0);
+    //CLASS_ATTR_LABEL(c, "d", 0, "dynamicvars");
+    CLASS_ATTR_LONG(c, "n", 0, t_easings, g_nval);
+    CLASS_ATTR_FILTER_CLIP(c, "n", 0, 20);
+    //CLASS_ATTR_LABEL(c, "n", 0, "dynamicvars");
+    CLASS_ATTR_CATEGORY(c, "dynamicvars", 0, "Dynamic Variables");
+    //CLASS_ATTR_ENUM(c, "dynamicvars", 0, "a b c d n");
     
     class_register(CLASS_BOX, c);
     easings_class = c;
@@ -117,8 +160,9 @@ void *easings_new(t_symbol *s, long argc, t_atom *argv)
     floatin(x, 2); // new inlet for levin 'b'
     floatin(x, 1); // new inlet for levin 'a'
     
-    x->outlet = floatout((t_easings *)x); // create a float outlet
-    //x->outlet1 = floatout((t_easings *)x); // create second float outlet
+    //x->outlet = floatout((t_easings *)x); // create a float outlet
+    x->outlet = outlet_new((t_easings *)x, NULL); // create an anything outlet
+    x->outlet1 = floatout((t_easings *)x); // create second float outlet
     
     x->e_val0 = 0; // set initial left inlet value to zero
     x->e_val1 = 0; // set initial left inlet value to (not: variable set by arguments edit: do this)
@@ -127,6 +171,7 @@ void *easings_new(t_symbol *s, long argc, t_atom *argv)
     x->g_nval = 0; // set initial 'n' inlet value to zero
     x->g_cval = 0.0; // set initial 'c' inlet value to zero
     x->g_dval = 0.0; // set initial 'd' inlet value to zero
+    
     
     attr_args_process(x, argc, argv);
     object_attach_byptr_register(x, x, CLASS_BOX);
@@ -164,7 +209,7 @@ void easings_assist(t_easings *x, void *b, long m, long a, char *s)
             case 5:
                 sprintf(s, "inlet %ld: 'n' (levin algos only) integer 1-20", a);
                 break;
-
+                
         }
     }
 }
@@ -172,282 +217,1284 @@ void easings_assist(t_easings *x, void *b, long m, long a, char *s)
 t_max_err easings_notify(t_easings *x, t_symbol *s, t_symbol *msg, void *sender, void *data, long ac, t_atom *av)
 {
     t_symbol *attrname;
+    
+    double myval = 0.0; // initialise myval as 0.0
+    double t = 0.0;
+    
+    double ga = x->g_aval; // levin 'a'
+    double gb = x->g_bval; // levin 'b'
+    long   gn = x->g_nval; // levin 'n'
+    double gc = x->g_cval; // levin 'c'
+    double gd = x->g_dval; // levin 'd'
+    
+    double b = 0.0; // start value (0.0 for norm)
+    double c = 1.0; // change in value (1.0 for norm)
+    double d = 1.0; // duration
+    double ss = 1.70158; // for "back" algos only
+    
+    double epsilon = 0.00001;
+    double min_param_a = 0.0 + epsilon;
+    double max_param_a = 1.0 - epsilon;
+    double min_param_b = 0.0;
+    double max_param_b = 1.0;
+    ga = fmin(max_param_a, fmax(min_param_a, ga));
+    gb = fmin(max_param_b, fmax(min_param_b, gb));
+    
+    t_atom theList[200];
+    
     if (msg == gensym("attr_modified")) {       // check notification type
         switch(x->e_val1) {
             case 0: {
                 post("Linear(No Easing)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = c * ( t / d ) + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 1: {
-                post("Quad(EaseIn)");
+                post("Quadratic(EaseIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = c * ( t /= d ) * t + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 2: {
-                post("Quad(EaseOut)");
+                post("Quadratic(EaseOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = -c * ( t/=d ) * ( t - 2 ) + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 3: {
-                post("Quad(EaseInOut)");
+                post("Quadratic(EaseInOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    
+                    if ( ( t /= d / 2 ) < 1 ) {
+                        myval = c/2 * t * t + b;
+                    } else {
+                        myval = -c/2 * (( --t ) * ( t - 2 ) - 1) + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 4: {
-                post("Quad(EaseOutIn)");
+                post("Quadratic(EaseOutIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    
+                    if (t < d/2) {
+                        double tt = t * 2;
+                        double cc = c / 2;
+                        myval = -cc * ( tt /= d ) * ( tt - 2 ) + b;
+                    } else {
+                        double tt = ( t * 2 ) - d;
+                        double bb = b + ( c/2 );
+                        double cc = c / 2;
+                        myval = cc * ( tt /= d ) * tt + bb;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 5: {
                 post(" Cubic(EaseIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = c * ( t /= d ) * t * t + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 6: {
                 post("Cubic(EaseOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = c * (( t = t/d - 1) * t * t + 1) + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 7: {
                 post("Cubic(EaseInOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (( t /= d / 2) < 1) {
+                        myval = c / 2 * t * t * t + b;
+                    } else {
+                        myval = c/2 * (( t -= 2) * t * t + 2) + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 8: {
                 post("Cubic(EaseOutIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t < d / 2) {
+                        double tt = t * 2;
+                        double cc = c / 2;
+                        myval = cc * ( ( tt = tt / d - 1 ) * tt * tt + 1) + b;
+                    } else {
+                        double tt = ( t * 2 ) - d;
+                        double bb = b + ( c / 2 );
+                        double cc = c / 2;
+                        myval = cc * ( tt /= d) * tt * tt + bb;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 9: {
                 post("Quart(EaseIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = c * ( t /= d ) * t * t * t + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 10: {
                 post("Quart(EaseOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = -c * ( ( t = t / d - 1) * t * t * t - 1) + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 11: {
                 post("Quart(EaseInOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if ( ( t /= d / 2 ) < 1) {
+                        myval = c / 2 * t * t * t * t + b;
+                    } else {
+                        myval = -c / 2 * ( ( t -= 2) * t * t * t - 2) + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 12: {
                 post("Quart(EaseOutIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t < d/2) {
+                        double tt = t * 2;
+                        double cc = c / 2;
+                        myval = -cc * (( tt = tt / d - 1) * tt * tt * tt - 1) + b;
+                    } else {
+                        double tt = ( t * 2 ) - d;
+                        double bb = b + c / 2;
+                        double cc = c / 2;
+                        myval = cc * ( tt /= d ) * tt * tt * tt + bb;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 13: {
                 post("Quint(EaseIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = c * ( t /= d) * t * t * t * t + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 14: {
                 post("Quint(EaseOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = c * ( ( t = t / d - 1 ) * t * t * t * t + 1) + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 15: {
                 post("Quint(EaseInOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if ( ( t /= d / 2) < 1) {
+                        myval = c / 2 * t * t * t * t * t + b;
+                    } else {
+                        myval = c / 2 * ( ( t -= 2 ) * t * t * t * t + 2) + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 16: {
                 post("Quint(EaseOutIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t < d/2) {
+                        double tt = t * 2;
+                        double cc = c / 2;
+                        myval = cc * ( ( tt = tt / d - 1) * tt * tt * tt * tt + 1) + b;
+                    } else {
+                        double tt = ( t * 2 )-d;
+                        double bb = b + c / 2;
+                        double cc = c / 2;
+                        myval = cc * ( tt /= d ) * tt * tt * tt * tt + bb;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 17: {
                 post("Sine(EaseIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = -c * cos( t / d * ( M_PI / 2 )) + c + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 18: {
                 post("Sine(EaseOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = c * sin( t / d * ( M_PI / 2 )) + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 19: {
                 post("Sine(EaseInOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = -c / 2 * ( cos( M_PI * t / d ) - 1) + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 20: {
                 post("Sine(EaseOutIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if(t < d/2){
+                        double tt = t * 2;
+                        double cc = c / 2;
+                        myval = cc * sin( tt / d * ( M_PI / 2 )) + b;
+                    } else {
+                        double tt = ( t * 2 ) - d;
+                        double bb = b + c / 2;
+                        double cc = c / 2;
+                        myval = -cc * cos( tt / d * ( M_PI / 2 )) + cc + bb;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 21: {
                 post("Circ(EaseIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = -c * ( sqrt( 1 - ( t /= d ) * t ) - 1) + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 22: {
                 post("Circ(EaseOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = c * sqrt(1 - ( t = t/d - 1 ) * t) + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 23: {
                 post("Circ(EaseInOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if ((t/=d/2) < 1) {
+                        myval = -c/2 * (sqrt( 1 - t * t ) - 1) + b;
+                    } else {
+                        myval = c/2 * (sqrt(1 - ( t -= 2 ) * t) + 1) + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 24: {
                 post("Circ(EaseOutIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t < d/2) {
+                        double tt = t * 2;
+                        double cc = c / 2;
+                        myval = cc * sqrt(1 - ( tt = tt/d - 1) * tt) + b;
+                    } else {
+                        double tt = ( t * 2 ) - d;
+                        double bb = b + c / 2;
+                        double cc = c / 2;
+                        myval = -cc * (sqrt(1 - ( tt /= d ) * tt) - 1) + bb;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 25: {
                 post("Expo(EaseIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t==0) {
+                        myval = b;
+                    } else {
+                        myval = c * pow( 2, 10 * ( t/d - 1 )) + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 26: {
                 post("Expo(EaseOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t==d) {
+                        myval = c+d;
+                    } else {
+                        myval = c * (-pow(2, -10 * t/d) + 1) + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 27: {
                 post("Expo(EaseInOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t==0){
+                        myval = b;
+                    } else if (t==d){
+                        myval = b+c;
+                    } else if (( t /= d/2 ) < 1) {
+                        myval = c/2 * pow( 2, 10 * (t - 1) ) + b;
+                    } else {
+                        myval = c/2 * (-pow( 2, -10 * --t ) + 2) + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 28: {
                 post("Expo(EaseOutIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t < d/2) {
+                        double tt = t * 2;
+                        double cc = c / 2;
+                        myval = cc * ( -pow( 2, -10 * tt/d ) + 1) + b;
+                    } else {
+                        double tt = ( t * 2 )-d;
+                        double bb = b + ( c / 2 );
+                        double cc = c / 2;
+                        myval = cc * pow(2, 10 * ( tt/d - 1 )) + bb;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 29: {
-                post("Back(EaseIn)");
+                post("Back(EaseIn) :: Exceeds normalised range");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = c * ( t /= d ) * t * (( ss + 1 ) * t - ss) + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 30: {
-                post("Back(EaseOut)");
+                post("Back(EaseOut) :: Exceeds normalised range");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = c * (( t = t / d - 1 ) * t * (( ss + 1 ) * t + ss) + 1) + b;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 31: {
-                post("Back(EaseInOut)");
+                post("Back(EaseInOut) :: Exceeds normalised range");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if ( (t/=(d/2)) < 1 ){
+                        double s = ss; // < need to adjust for custom in future
+                        myval = c / 2 * ( t * t * ((( s *= 1.525 ) + 1 ) * t - s)) + b;
+                    } else {
+                        double s = ss; // < need to adjust for custom in future
+                        myval = c / 2 * (( t -= 2 ) * t * ((( s *= 1.525 ) + 1 ) * t + s) + 2) + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 32: {
-                post("Back(EaseOutIn)");
+                post("Back(EaseOutIn) :: Exceeds normalised range");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t < d/2) {
+                        double tt=t*2;
+                        double cc=c/2;
+                        myval = cc * (( tt = tt/d - 1 ) * tt * (( ss + 1 ) * tt + ss) + 1) + b;
+                    } else {
+                        double tt = ( t * 2 ) - d;
+                        double bb = b + c / 2;
+                        double cc = c / 2;
+                        myval = cc * ( tt /= d ) * tt * (( ss + 1 ) * tt - ss) + bb;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 33: {
                 post("Bounce(EaseIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    t = d-t;
+                    b = 0;
+                    if (( t /= d ) < ( 1/2.75 )){
+                        double e = c * ( 7.5625 * t * t ) + b;
+                        myval = c - e + b;
+                    } else if (t < (2/2.75)) {
+                        double e = c * ( 7.5625 * ( t -= ( 1.5/2.75 )) * t + 0.75) + b;
+                        myval = c - e + b;
+                    } else if (t < (2.5/2.75)) {
+                        double e = c * ( 7.5625 * ( t -= (2.25/2.75) ) * t + 0.9375) + b;
+                        myval = c - e + b;
+                    } else {
+                        double e = c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
+                        myval = c - e + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 34: {
                 post("Bounce(EaseOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (( t /= d ) < (1/2.75)) {
+                        myval = c * (7.5625 * t * t) + b;
+                    } else if (t < (2/2.75)) {
+                        myval = c * (7.5625 * ( t -= (1.5/2.75)) * t + 0.75) + b;
+                    } else if (t < (2.5/2.75)) {
+                        myval = c * (7.5625 * ( t -= (2.25/2.75)) * t + 0.9375) + b;
+                    } else {
+                        myval = c*(7.5625*( t -= (2.625/2.75)) * t + 0.984375) + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 35: {
                 post("Bounce(EaseInOut)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t < d/2) {
+                        t = t * 2;
+                        t = d - t;
+                        b = 0;
+                        if ((t/=d) < (1/2.75)){
+                            double e = c * (7.5625 * t * t) + b;
+                            myval = (c - e + b)*0.5 + b;
+                        } else if (t < (2/2.75)) {
+                            double e = c * (7.5625 * ( t -= (1.5/2.75)) * t + 0.75) + b;
+                            myval = (c - e + b)*0.5 + b;
+                        } else if (t < (2.5/2.75)) {
+                            double e = c * (7.5625 * ( t -= (2.25/2.75)) * t + 0.9375) + b;
+                            myval = (c - e + b)*0.5 + b;
+                        } else {
+                            double e = c * (7.5625 * ( t -= (2.625/2.75)) * t + 0.984375) + b;
+                            myval = (c - e + b) * 0.5 + b;
+                        }
+                    } else {
+                        t = t * 2 - d;
+                        if ((t/=d) < (1/2.75)) {
+                            myval = ( c * (7.5625 * t * t) + b) * 0.5 + (c * 0.5) + b;
+                        } else if (t < (2/2.75)) {
+                            myval = ( c * (7.5625 * ( t -= (1.5/2.75)) * t + 0.75) + b) * 0.5 + (c * 0.5) + b;
+                        } else if (t < (2.5/2.75)) {
+                            myval = (c * (7.5625 * (t -= (2.25/2.75)) * t + 0.9375) + b) * 0.5 + (c * 0.5) + b;
+                        } else {
+                            myval = (c * (7.5625 * (t -= (2.625/2.75)) * t + 0.984375) + b) * 0.5 + (c * 0.5) +b;
+                        }
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 36: {
                 post("Bounce(EaseOutIn)");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if(t <d/2){
+                        double tt = t * 2;
+                        double cc=c/2;
+                        if ((tt/=d) < (1/2.75)) {
+                            myval = cc * (7.5625 * tt * tt) + b;
+                        } else if (tt < (2/2.75)) {
+                            myval = cc * (7.5625 * (tt -= (1.5/2.75)) * tt + 0.75) + b;
+                        } else if (tt < (2.5/2.75)) {
+                            myval = cc * (7.5625 * (tt -= (2.25/2.75)) * tt + 0.9375) + b;
+                        } else {
+                            myval = cc * (7.5625*(tt -= (2.625/2.75)) * tt + 0.984375) + b;
+                        }
+                    } else {
+                        double tt = ( t * 2 )-d;
+                        double bb = b + c / 2;
+                        double cc = c / 2;
+                        double ttt = d - tt;
+                        double bbb = 0;
+                        if ((ttt/=d) < (1/2.75)){
+                            double e = cc * (7.5625 * ttt * ttt) + bbb;
+                            myval = cc - e + bb;
+                        } else if (ttt < (2/2.75)) {
+                            double e = cc * ( 7.5625 * (ttt -= (1.5/2.75)) * ttt + 0.75) + bbb;
+                            myval = cc - e + bb;
+                        } else if (ttt < (2.5/2.75)) {
+                            double e = cc * (7.5625 * (ttt -= (2.25/2.75)) * ttt + 0.9375) + bbb;
+                            myval = cc - e + bb;
+                        } else {
+                            double e = cc * (7.5625 * (ttt -= (2.625/2.75)) * ttt + 0.984375) + bbb;
+                            myval = cc - e + bb;
+                        }
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 37: {
-                post("Elastic(EaseIn)");
+                post("Elastic(EaseIn) :: Exceeds normalised range");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if(t==0) {
+                        myval = b;
+                    } else if((t/=d)==1) {
+                        myval = b+c;
+                    } else {
+                        double p = d * 0.3;
+                        double a = c;
+                        double z = p/4;
+                        double zz = a * pow(2,10 *( t -= 1 )) * sin((t * d - z) * (2 * M_PI) / p);
+                        myval = -zz + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 38: {
-                post("Elastic(EaseOut)");
+                post("Elastic(EaseOut) :: Exceeds normalised range");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if(t==0) {
+                        myval = b;
+                    } else if((t/=d)==1) {
+                        myval = b+c;
+                    } else {
+                        double p = d * 0.3;
+                        double a = c;
+                        double z = p/4;
+                        double zz = a * pow(2,-10 * t) * sin(( t * d - z ) * ( 2 * M_PI)/p);
+                        myval = zz + c + b;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 39: {
-                post("Elastic(EaseInOut)");
-                break;
-            }
+                post("Elastic(EaseInOut) :: Exceeds normalised range");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if(t==0) {
+                        myval = b;
+                    } else if((t/=d/2)==2) {
+                        myval = b + c;
+                    } else {
+                        double p = d * (0.3 * 1.5);
+                        double a = c;
+                        double z = p / 4;
+                        if(t < 1){
+                            myval = -0.5 * (a * pow(2,10 * ( t -= 1 )) * sin( ( t * d - z ) * ( 2 * M_PI) / p )) + b;
+                        } else {
+                            myval = a * pow(2,-10 * ( t -= 1 )) * sin( ( t * d - z ) * ( 2 * M_PI) / p ) * 0.5 + c + b;
+                        }
+                    }
+                    atom_setfloat(theList + i, myval);
+                    }
+                    outlet_list(x->outlet, 0L, 200, theList);
+                    break;
+                }
             case 40: {
-                post("Elastic(EaseOutIn)");
-                break;
-            }
+                post("Elastic(EaseOutIn) :: Exceeds normalised range");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if(t < d/2){
+                        double tt = t * 2;
+                        double cc = c / 2;
+                        if(tt==0) {
+                            myval = b;
+                        } else if((tt/=d)==1) {
+                            myval = b+cc;
+                        } else {
+                            double p = d * 0.3;
+                            double a = cc;
+                            double z = p/4;
+                            double zz = a * pow( 2,-10 * tt ) * sin(( tt * d - z ) * ( 2 * M_PI )/p);
+                            myval = zz + cc + b;
+                        }
+                    } else {
+                        double tt = ( t * 2 ) - d;
+                        double bb = b + c / 2;
+                        double cc = c / 2;
+                        if(t==0) {
+                            myval = bb;
+                        } else if((tt/=d)==1) {
+                            myval = bb+cc;
+                        } else {
+                            double p = d * 0.3;
+                            double a = cc;
+                            double z = p/4;
+                            double zz = a * pow( 2,10 * ( tt -= 1 )) * sin(( tt * d - z ) * ( 2 * M_PI ) / p );
+                            myval = -zz + bb;
+                        }
+                    }
+                    atom_setfloat(theList + i, myval);
+                    }
+                    outlet_list(x->outlet, 0L, 200, theList);
+                    break;
+                }
             case 41: {
                 post("Blinn-Wyvill Cosine Approximation");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    double t2 = t * t;
+                    double t4 = t2 * t2;
+                    double t6 = t4 * t2;
+                    
+                    double fa = ( 4.0/9.0);
+                    double fb = (17.0/9.0);
+                    double fc = (22.0/9.0);
+                    
+                    myval = fa * t6 - fb * t4 + fc * t2;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 42: {
                 post("Double-Cubic Seat");
                 post("use variables 'a' & 'b' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t <= ga){
+                        myval = gb - gb*pow(1-t/ga, 3.0);
+                    } else {
+                        myval = gb + (1-gb)*pow((t-ga)/(1-ga), 3.0);
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 43: {
                 post("Double-Cubic Seat with Linear Bend");
                 post("use variables 'a' & 'b' to shape");
+                gb = 1.0 - gb; // reverse for intelligibility
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t <= ga){
+                        myval = gb * t + (1-gb) * ga * (1 - pow(1 - t / ga, 3.0));
+                    } else {
+                        myval = gb * t + (1-gb) * (ga + (1 - ga) * pow(( t - ga )/( 1 - ga), 3.0));
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 44: {
                 post("Double-Odd-Polynomial Seat");
                 post("use variables 'a', 'b' & 'n' to shape");
+                int p = 2 * gn + 1;
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t <= ga){
+                        myval = gb - gb * pow(1-t/ga, p);
+                    } else {
+                        myval = gb + (1 - gb) * pow((t - ga) / (1 - ga), p);
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 45: {
                 post("Symmetric Double-Polynomial Sigmoids");
                 post("use variables 'a', 'b' & 'n' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (gn%2 == 0){
+                        // even polynomial
+                        if (t <= 0.5){
+                            myval = pow(2.0 * t, gn) / 2.0;
+                        } else {
+                            myval = 1.0 - pow(2 * (t - 1), gn) / 2.0;
+                        }
+                    }
+                    else {
+                        // odd polynomial
+                        if (t <= 0.5){
+                            myval = pow(2.0 * t, gn) / 2.0;
+                        } else {
+                            myval = 1.0 + pow(2.0 * (t - 1), gn) / 2.0;
+                        }
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 46: {
                 post("Quadratic Through a Given Point");
                 post("use variables 'a' & 'b' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    double GA = (1 - gb) / (1 - ga) - (gb / ga);
+                    double GB = (GA * (ga * ga) - gb) / ga;
+                    double y = GA * (t * t) - GB * (t);
+                    myval = fmin(1, fmax(0,y));
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 47: {
                 post("Exponential Emphasis");
                 post("use variable 'a' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (ga < 0.5){
+                        // emphasis
+                        double gga = 2.0 * (ga);
+                        myval = pow(t, gga);
+                    } else {
+                        // de-emphasis
+                        double gga = 2.0 * (ga - 0.5);
+                        myval = pow(t, 1.0 / (1 - gga));
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 48: {
                 post("Double-Exponential Seat");
                 post("use variable 'a' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t <= 0.5){
+                        myval = (pow(2.0 * t, 1 - ga)) / 2.0;
+                    } else {
+                        myval = 1.0 - (pow(2.0 * (1.0 - t), 1 - ga)) / 2.0;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 49: {
                 post("Double-Exponential Sigmoid");
                 post("use variable 'a' to shape");
+                ga = 1.0 - ga;
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    // reversed for sensible results
+                    if (t <= 0.5){
+                        myval = (pow(2.0 * t, 1.0 / ga)) / 2.0;
+                    } else {
+                        myval = 1.0 - (pow(2.0 * (1.0 - t), 1.0 / ga)) / 2.0;
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 50: {
                 post("Modified Logistic Sigmoid");
                 post("use variable 'a' to shape");
+                ga = (1 / (1 - ga) - 1);
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    
+                    double GA = 1.0 / (1.0 + exp(0 -((t - 0.5) * ga * 2.0)));
+                    double GB = 1.0 / (1.0 + exp(ga));
+                    double GC = 1.0 / (1.0 + exp(0 - ga));
+                    myval = (GA - GB) / (GC - GB);
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 51: {
                 post("Circular Ease In");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = 1 - sqrt(1 - t * t);
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 52: {
                 post("Circular Ease Out");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = sqrt(1 - pow((1 - t), 2.0));
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 53: {
                 post("Double-Circular Seat");
                 post("use variable 'a' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t <= ga){
+                        myval = sqrt(pow(ga,2.0) - pow((t-ga),2.0));
+                    } else {
+                        myval = 1 - sqrt(pow((1-ga),2.0) - pow((t-ga),2.0));
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 54: {
                 post("Double-Circular Sigmoid");
                 post("use variable 'a' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t <= ga){
+                        myval = ga - sqrt(ga * ga - t * t);
+                    } else {
+                        myval = ga + sqrt(pow((1 - ga),2.0) - pow((t - 1), 2.0));
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 55: {
                 post("Double-Elliptic Seat");
                 post("use variables 'a' & 'b' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t <= ga){
+                        myval = (gb / ga) * sqrt(pow(ga, 2.0) - pow((t - ga), 2.0));
+                    } else {
+                        myval = 1- ((1 - gb) / (1 - ga)) * sqrt(pow((1 - ga), 2.0) - pow((t - ga),2.0));
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 56: {
                 post("Double-Elliptic Sigmoid");
                 post("use variables 'a' & 'b' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    if (t <= ga){
+                        myval = gb * (1 - (sqrt(pow(ga, 2.0) - pow(t, 2.0)) / ga));
+                    } else {
+                        myval = gb + ((1 - gb) / (1 - ga)) * sqrt(pow((1 - ga),2.0) - pow((t - 1),2.0));
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 57: {
                 post("Double-Linear with Circular Fillet");
                 post("use variables 'a', 'b' & 'd' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    
+                    double arcStartAngle;
+                    double arcEndAngle;
+                    double arcStartX,  arcStartY;
+                    double arcEndX,    arcEndY;
+                    double arcCenterX, arcCenterY;
+                    double arcRadius;
+                    
+                    //computeFilletParameters (0,0, a,b, a,b, 1,1,  R);
+                    double p1x = 0; double p1y = 0;
+                    double p2x = ga; double p2y = gb;
+                    double p3x = ga; double p3y = gb;
+                    double p4x = 1; double p4y = 1;
+                    double r = gd;
+                    
+                    double c1   = p2x * p1y - p1x * p2y;
+                    double a1   = p2y - p1y;
+                    double b1   = p1x - p2x;
+                    double c2   = p4x * p3y - p3x * p4y;
+                    double a2   = p4y - p3y;
+                    double b2   = p3x - p4x;
+                    if ((a1 * b2) == (a2 * b1)){  /* Parallel or coincident lines */
+                        //break;
+                    }
+                    
+                    double d1, d2;
+                    double mPx, mPy;
+                    mPx = (p3x + p4x)/2.0;
+                    mPy = (p3y + p4y)/2.0;
+                    
+                    //d1 = linetopoint(a1,b1,c1,mPx,mPy);  /* Find distance p1p2 to p3 */\
+                    
+                    // Return signed distance from line Ax + By + C = 0 to point P.
+                    // float linetopoint (float a, float b, float c, float ptx, float pty){
+                    //      float lp = 0.0;
+                    //      float d = sqrt((a*a)+(b*b));
+                    //      if (d != 0.0){
+                    //          lp = (a*ptx + b*pty + c)/d;
+                    //      }
+                    //      return lp;
+                    // }
+                    
+                    d1 = 0.0;
+                    double dd1 = sqrt((a1*a1)+(b1*b1));
+                    if (dd1 != 0.0){
+                        d1 = (a1*mPx + b1*mPy + c1)/dd1;
+                    }
+                    
+                    if (d1 == 0.0) {
+                        //break;
+                    }
+                    
+                    mPx = (p1x + p2x)/2.0;
+                    mPy = (p1y + p2y)/2.0;
+                    
+                    //d2 = linetopoint(a2,b2,c2,mPx,mPy);  /* Find distance p3p4 to p2 */
+                    
+                    d2 = 0.0;
+                    double dd2 = sqrt((a2*a2)+(b2*b2));
+                    if (dd2 != 0.0){
+                        d2 = (a2*mPx + b2*mPy + c2)/dd2;
+                    }
+                    
+                    if (d2 == 0.0) {
+                        //break;
+                    }
+                    
+                    double c1p, c2p, d;
+                    double rr = r;
+                    if (d1 <= 0.0) {
+                        rr= -rr;
+                    }
+                    c1p = c1 - rr*sqrt((a1*a1)+(b1*b1));  /* Line parallel l1 at d */
+                    rr = r;
+                    if (d2 <= 0.0){
+                        rr = -rr;
+                    }
+                    c2p = c2 - rr*sqrt((a2*a2)+(b2*b2));  /* Line parallel l2 at d */
+                    d = (a1*b2)-(a2*b1);
+                    
+                    double pCx = (c2p*b1-c1p*b2)/d; /* Intersect constructed lines */
+                    double pCy = (c1p*a2-c2p*a1)/d; /* to find center of arc */
+                    double pAx = 0;
+                    double pAy = 0;
+                    double pBx = 0;
+                    double pBy = 0;
+                    double dP,cP;
+                    
+                    dP = (a1*a1) + (b1*b1);        /* Clip or extend lines as required */
+                    if (dP != 0.0){
+                        cP = a1*pCy - b1*pCx;
+                        pAx = (-a1*c1 - b1*cP)/dP;
+                        pAy = ( a1*cP - b1*c1)/dP;
+                    }
+                    dP = (a2*a2) + (b2*b2);
+                    if (dP != 0.0){
+                        cP = a2*pCy - b2*pCx;
+                        pBx = (-a2*c2 - b2*cP)/dP;
+                        pBy = ( a2*cP - b2*c2)/dP;
+                    }
+                    
+                    double gv1x = pAx-pCx;
+                    double gv1y = pAy-pCy;
+                    double gv2x = pBx-pCx;
+                    double gv2y = pBy-pCy;
+                    
+                    double arcStart = (double) atan2(gv1y,gv1x);
+                    double arcAngle = 0.0;
+                    double dd = (double) sqrt(((gv1x*gv1x)+(gv1y*gv1y)) * ((gv2x*gv2x)+(gv2y*gv2y)));
+                    if (dd != (double) 0.0){
+                        arcAngle = (acos((gv1x*gv2x + gv1y*gv2y)/dd));
+                    }
+                    double crossProduct = (gv1x*gv2y - gv2x*gv1y);
+                    if (crossProduct < 0.0){
+                        arcStart -= arcAngle;
+                    }
+                    
+                    double arc1 = arcStart;
+                    double arc2 = arcStart + arcAngle;
+                    if (crossProduct < 0.0){
+                        arc1 = arcStart + arcAngle;
+                        arc2 = arcStart;
+                    }
+                    
+                    arcCenterX    = pCx;
+                    arcCenterY    = pCy;
+                    arcStartAngle = arc1;
+                    arcEndAngle   = arc2;
+                    arcRadius     = r;
+                    arcStartX     = arcCenterX + arcRadius*cos(arcStartAngle);
+                    arcStartY     = arcCenterY + arcRadius*sin(arcStartAngle);
+                    arcEndX       = arcCenterX + arcRadius*cos(arcEndAngle);
+                    arcEndY       = arcCenterY + arcRadius*sin(arcEndAngle);
+                    //End compute parameters
+                    
+                    double tt = 0;
+                    t = fmax(0, fmin(1, t));
+                    
+                    if (t <= arcStartX){
+                        tt = t / arcStartX;
+                        myval = tt * arcStartY;
+                    } else if (t >= arcEndX){
+                        tt = (t - arcEndX)/(1 - arcEndX);
+                        myval = arcEndY + tt * (1 - arcEndY);
+                    } else {
+                        if (t >= arcCenterX){
+                            myval = arcCenterY - sqrt(pow(arcRadius,2.0) - pow((t-arcCenterX),2.0));
+                        } else{
+                            myval = arcCenterY + sqrt(pow(arcRadius, 2.0) - pow((t-arcCenterX),2.0));
+                        }
+                    }
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 58: {
                 post("Circular Arc Through A Given Point");
                 post("use variables 'a' & 'b' to shape");
-                post("NOT FINISHED!");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    myval = circularArcThroughAPoint (t, ga, gb);
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 59: {
                 post("Quadtratic Bezier");
                 post("use variables 'a' & 'b' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    double epsilon = 0.00001;
+                    ga = fmax(0, fmin(1, ga));
+                    gb = fmax(0, fmin(1, gb));
+                    if (ga == 0.5){
+                        ga += epsilon;
+                    }
+                    // solve t from x (an inverse operation)
+                    double om2a = 1 - 2 * ga;
+                    double gt = (sqrt(ga * ga + om2a * t) - ga) / om2a;
+                    myval = (1 - 2 * gb) * (gt * gt) + (2 * gb) * gt;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 60: {
                 post("Cubic Bezier");
                 post("use variables 'a', 'b', 'c' & 'd' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    double y0a = 0.00; // initial y
+                    double x0a = 0.00; // initial x
+                    double y1a = gb;    // 1st influence y
+                    double x1a = ga;    // 1st influence x
+                    double y2a = gd;    // 2nd influence y
+                    double x2a = gc;    // 2nd influence x
+                    double y3a = 1.00; // final y
+                    double x3a = 1.00; // final x
+                    
+                    double A =   x3a - 3 * x2a + 3 * x1a - x0a;
+                    double B =   3 * x2a - 6 * x1a + 3 * x0a;
+                    double C =   3 * x1a - 3 * x0a;
+                    double D =   x0a;
+                    
+                    double E =   y3a - 3 * y2a + 3 * y1a - y0a;
+                    double F =   3 * y2a - 6 * y1a + 3 * y0a;
+                    double G =   3 * y1a - 3 * y0a;
+                    double H =   y0a;
+                    
+                    // Solve for t given x (using Newton-Raphelson), then solve for y given t.
+                    // Assume for the first guess that t = x.
+                    double currentt = t;
+                    int nRefinementIterations = 5;
+                    for (int noti=0; noti < nRefinementIterations; noti++)
+                    {
+                        //float currentx = xFromT (currentt, A,B,C,D);
+                        double currentx = A * (currentt * currentt * currentt) + B * (currentt * currentt) + C * currentt + D;
+                        
+                        //float currentslope = slopeFromT (currentt, A,B,C);
+                        double currentslope = 1.0 / (3.0 * A * currentt * currentt + 2.0 * B * currentt + C);
+                        
+                        currentt -= (currentx - t) * (currentslope);
+                        currentt = CLAMP(currentt, 0,1);
+                    }
+                    //float y = yFromT (currentt,  E,F,G,H);
+                    myval = E * (currentt * currentt * currentt) + F * (currentt * currentt) + G * currentt + H;
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
             case 61: {
                 post("Cubic Bezier (Nearly) Through Two Given Points");
                 post("use variables 'a', 'b', 'c' & 'd' to shape");
+                for (int i = 0; i < 200; i++){
+                    t = i/200.;
+                    double x0 = 0;
+                    double y0 = 0;
+                    double x4 = ga;
+                    double y4 = gb;
+                    double x5 = gc;
+                    double y5 = gd;
+                    double x3 = 1;
+                    double y3 = 1;
+                    double x1,y1,x2,y2; // to be solved.
+                    
+                    // arbitrary but reasonable
+                    // t-values for interior control points
+                    double t1 = 0.3;
+                    double t2 = 0.7;
+                    
+                    double B0t1 = (1 - t1) * (1 - t1) * (1 - t1);
+                    double B1t1 = 3 * t1 * (1 - t1) * (1 - t1);
+                    double B2t1 = 3 * t1 * t1 * (1-t1);
+                    double B3t1 = t1 * t1 * t1;
+                    double B0t2 = (1-t2) * (1 - t2) * (1 - t2);
+                    double B1t2 = 3 * t2 * (1 - t2) * (1 - t2);
+                    double B2t2 = 3 * t2 * t2 * (1 - t2);
+                    double B3t2 = t2 * t2 * t2;
+                    
+                    double ccx = x4 - x0*B0t1 - x3*B3t1;
+                    double ccy = y4 - y0*B0t1 - y3*B3t1;
+                    double ffx = x5 - x0*B0t2 - x3*B3t2;
+                    double ffy = y5 - y0*B0t2 - y3*B3t2;
+                    
+                    x2 = (ccx - (ffx*B1t1)/B1t2) / (B2t1 - (B1t1*B2t2)/B1t2);
+                    y2 = (ccy - (ffy*B1t1)/B1t2) / (B2t1 - (B1t1*B2t2)/B1t2);
+                    x1 = (ccx - x2*B2t1) / B1t1;
+                    y1 = (ccy - y2*B2t1) / B1t1;
+                    
+                    x1 = fmax(0+epsilon, fmin(1-epsilon, x1));
+                    x2 = fmax(0+epsilon, fmin(1-epsilon, x2));
+                    
+                    //Cubic Bezier function:
+                    
+                    double y0a = 0.00; // initial y
+                    double x0a = 0.00; // initial x
+                    double y1a = y1;    // 1st influence y
+                    double x1a = x1;    // 1st influence x
+                    double y2a = y2;    // 2nd influence y
+                    double x2a = x2;    // 2nd influence x
+                    double y3a = 1.00; // final y
+                    double x3a = 1.00; // final x
+                    
+                    double A =   x3a - 3 * x2a + 3 * x1a - x0a;
+                    double B =   3 * x2a - 6 * x1a + 3 * x0a;
+                    double C =   3 * x1a - 3 * x0a;
+                    double D =   x0a;
+                    
+                    double E =   y3a - 3 * y2a + 3 * y1a - y0a;
+                    double F =   3 * y2a - 6 * y1a + 3 * y0a;
+                    double G =   3 * y1a - 3 * y0a;
+                    double H =   y0a;
+                    
+                    // Solve for t given x (using Newton-Raphelson), then solve for y given t.
+                    // Assume for the first guess that t = x.
+                    double currentt = t;
+                    int nRefinementIterations = 5;
+                    for (int noti=0; noti < nRefinementIterations; noti++){
+                        //double currentx = xFromT (currentt, A,B,C,D);
+                        double currentx = A * (currentt * currentt * currentt) + B * (currentt * currentt) + C * currentt + D;
+                        //double currentslope = slopeFromT (currentt, A,B,C);
+                        double currentslope = 1.0/(3.0 * A * currentt * currentt + 2.0 * B * currentt + C);
+                        currentt -= (currentx - t)*(currentslope);
+                        currentt = CLAMP(currentt, 0,1);
+                    }
+                    
+                    //float y = yFromT (currentt,  E,F,G,H);
+                    myval = E * (currentt * currentt * currentt) + F * (currentt * currentt) + G * currentt + H;
+                    myval = fmax(0, fmin(1, myval));
+                    atom_setfloat(theList + i, myval);
+                }
+                outlet_list(x->outlet, 0L, 200, theList);
                 break;
             }
+            }
+                //attrname = (t_symbol *)object_method((t_object *)data, gensym("getname"));      // "getname" = ask attribute object for name
+                //object_post((t_object *)x, "changed attr name is %s",attrname->s_name);
+                //object_post((t_object *)x, "it has %ld arguments", ac);
+            }
+                return 0;
         }
-        //attrname = (t_symbol *)object_method((t_object *)data, gensym("getname"));      // "getname" = ask attribute object for name
-        //object_post((t_object *)x, "changed attr name is %s",attrname->s_name);
-        //object_post((t_object *)x, "it has %ld arguments", ac);
-    }
-    return 0;
-}
+
 
 //t_max_err easings_setattr_expr(t_easings *x, void *attr, long ac, t_atom *av)
 //{
@@ -469,12 +1516,49 @@ t_max_err easings_notify(t_easings *x, t_symbol *s, t_symbol *msg, void *sender,
 //    return MAX_ERR_NONE;
 //}
 
+//void easings_printargs(t_easings *x, t_symbol *s, long argc, t_atom *argv)
+//{
+//    long i;
+//    t_atom *ap;
+//    post("message selector is %s",s->s_name);
+//    post("there are %ld arguments",argc);
+//    // increment ap each time to get to the next atom
+//    for (i = 0, ap = argv; i < argc; i++, ap++) {
+//        switch (atom_gettype(ap)) {
+//            case A_LONG:
+//                post("%ld: %ld",i+1,atom_getlong(ap));
+//                break;
+//            case A_FLOAT:
+//                post("%ld: %.2f",i+1,atom_getfloat(ap));
+//                break;
+//            case A_SYM:
+//                post("%ld: %s",i+1, atom_getsym(ap)->s_name);
+//                break;
+//            default:
+//                post("%ld: unknown atom type (%ld)", i+1, atom_gettype(ap));
+//                break;
+//        }
+//    }
+//}
+
+
+
+
+
+//void easings_anything(t_easings *x, t_symbol *s, long argc, t_atom *argv)
+//{
+//    object_post( (t_object*)x,
+//                "This method was invoked by sending the '%s' message to this object.",
+//                s->s_name);
+//    // argc and argv are the arguments, as described in above.
+//}
+
 
 //---------------------------------------------------------------------------
 
 void easings_bang(t_easings *x)
 {
-
+    
 }
 
 
@@ -483,6 +1567,7 @@ void easings_float(t_easings *x, double f)
     x->e_val0 = f; // pass float into global variable
     double t = 0.0; // initialise t as 0.0
     t = x->e_val0; // current time from float
+    
     double myval = 0.0; // initialise myval as 0.0
     
     double ga = x->g_aval; // levin 'a'
@@ -507,35 +1592,31 @@ void easings_float(t_easings *x, double f)
     
     
     
-    
     switch(x->e_val1){
         case(0):{
             //Linear (No Easing)
             myval = c * ( t / d ) + b;
-             
             break;
         }
         case(1):{
             //Quadratic(EaseIn)
             myval = c * ( t /= d ) * t + b;
-             
             break;
         }
         case(2):{
             //Quadratic(EaseOut)
             myval = -c * ( t/=d ) * ( t - 2 ) + b;
-             
             break;
         }
         case(3):{
             //Quadratic(EaseInOut)
             if ( ( t /= d / 2 ) < 1 ) {
                 myval = c/2 * t * t + b;
-                 
+                
                 break;
             } else {
                 myval = -c/2 * (( --t ) * ( t - 2 ) - 1) + b;
-                 
+                
                 break;
             }
         }
@@ -545,38 +1626,35 @@ void easings_float(t_easings *x, double f)
                 double tt = t * 2;
                 double cc = c / 2;
                 myval = -cc * ( tt /= d ) * ( tt - 2 ) + b;
-                 
+                
                 break;
             } else {
                 double tt = ( t * 2 ) - d;
                 double bb = b + ( c/2 );
                 double cc = c / 2;
                 myval = cc * ( tt /= d ) * tt + bb;
-                 
                 break;
             }
         }
         case(5):{
             //Cubic(EaseIn)
             myval = c * ( t /= d ) * t * t + b;
-             
             break;
         }
         case(6):{
             //Cubic(EaseOut)
             myval = c * (( t = t/d - 1) * t * t + 1) + b;
-             
             break;
         }
         case(7):{
             //Cubic(EaseInOut)
             if (( t /= d / 2) < 1) {
                 myval = c / 2 * t * t * t + b;
-                 
+                
                 break;
             } else {
                 myval = c/2 * (( t -= 2) * t * t + 2) + b;
-                 
+                
                 break;
             }
         }
@@ -586,38 +1664,37 @@ void easings_float(t_easings *x, double f)
                 double tt = t * 2;
                 double cc = c / 2;
                 myval = cc * ( ( tt = tt / d - 1 ) * tt * tt + 1) + b;
-                 
+                
                 break;
             } else {
                 double tt = ( t * 2 ) - d;
                 double bb = b + ( c / 2 );
                 double cc = c / 2;
                 myval = cc * ( tt /= d) * tt * tt + bb;
-                 
+                
                 break;
             }
         }
         case(9):{
             //Quartic(EaseIn)
             myval = c * ( t /= d ) * t * t * t + b;
-             
             break;
         }
         case(10):{
             //Quartic(EaseOut)
             myval = -c * ( ( t = t / d - 1) * t * t * t - 1) + b;
-             
+            
             break;
         }
         case(11):{
             //Quartic(EaseInOut)
             if ( ( t /= d / 2 ) < 1) {
                 myval = c / 2 * t * t * t * t + b;
-                 
+                
                 break;
             } else {
                 myval = -c / 2 * ( ( t -= 2) * t * t * t - 2) + b;
-                 
+                
                 break;
             }
         }
@@ -627,38 +1704,38 @@ void easings_float(t_easings *x, double f)
                 double tt = t * 2;
                 double cc = c / 2;
                 myval = -cc * (( tt = tt / d - 1) * tt * tt * tt - 1) + b;
-                 
+                
                 break;
             } else {
                 double tt = ( t * 2 ) - d;
                 double bb = b + c / 2;
                 double cc = c / 2;
                 myval = cc * ( tt /= d ) * tt * tt * tt + bb;
-                 
+                
                 break;
             }
         }
         case(13):{
             //Quintic(EaseIn)
             myval = c * ( t /= d) * t * t * t * t + b;
-             
+            
             break;
         }
         case(14):{
             //Quintic(EaseOut)
             myval = c * ( ( t = t / d - 1 ) * t * t * t * t + 1) + b;
-             
+            
             break;
         }
         case(15):{
             //Quintic(EaseInOut)
             if ( ( t /= d / 2) < 1) {
                 myval = c / 2 * t * t * t * t * t + b;
-                 
+                
                 break;
             } else {
                 myval = c / 2 * ( ( t -= 2 ) * t * t * t * t + 2) + b;
-                 
+                
                 break;
             }
         }
@@ -668,33 +1745,33 @@ void easings_float(t_easings *x, double f)
                 double tt = t * 2;
                 double cc = c / 2;
                 myval = cc * ( ( tt = tt / d - 1) * tt * tt * tt * tt + 1) + b;
-                 
+                
                 break;
             } else {
                 double tt = ( t * 2 )-d;
                 double bb = b + c / 2;
                 double cc = c / 2;
                 myval = cc * ( tt /= d ) * tt * tt * tt * tt + bb;
-                 
+                
                 break;
             }
         }
         case(17):{
             //Sine(EaseIn)
             myval = -c * cos( t / d * ( M_PI / 2 )) + c + b;
-             
+            
             break;
         }
         case(18):{
             //Sine(EaseOut)
             myval = c * sin( t / d * ( M_PI / 2 )) + b;
-             
+            
             break;
         }
         case(19):{
             //Sine(EaseInOut)
             myval = -c / 2 * ( cos( M_PI * t / d ) - 1) + b;
-             
+            
             break;
         }
         case(20):{
@@ -703,38 +1780,38 @@ void easings_float(t_easings *x, double f)
                 double tt = t * 2;
                 double cc = c / 2;
                 myval = cc * sin( tt / d * ( M_PI / 2 )) + b;
-                 
+                
                 break;
             } else {
                 double tt = ( t * 2 ) - d;
                 double bb = b + c / 2;
                 double cc = c / 2;
                 myval = -cc * cos( tt / d * ( M_PI / 2 )) + cc + bb;
-                 
+                
                 break;
             }
         }
         case(21):{
             //Circ(EaseIn)
             myval = -c * ( sqrt( 1 - ( t /= d ) * t ) - 1) + b;
-             
+            
             break;
         }
         case(22):{
             //Circ(EaseOut)
             myval = c * sqrt(1 - ( t = t/d - 1 ) * t) + b;
-             
+            
             break;
         }
         case(23):{
             //Circ(EaseInOut)
             if ((t/=d/2) < 1) {
                 myval = -c/2 * (sqrt( 1 - t * t ) - 1) + b;
-                 
+                
                 break;
             } else {
                 myval = c/2 * (sqrt(1 - ( t -= 2 ) * t) + 1) + b;
-                 
+                
                 break;
             }
         }
@@ -744,14 +1821,14 @@ void easings_float(t_easings *x, double f)
                 double tt = t * 2;
                 double cc = c / 2;
                 myval = cc * sqrt(1 - ( tt = tt/d - 1) * tt) + b;
-                 
+                
                 break;
             } else {
                 double tt = ( t * 2 ) - d;
                 double bb = b + c / 2;
                 double cc = c / 2;
                 myval = -cc * (sqrt(1 - ( tt /= d ) * tt) - 1) + bb;
-                 
+                
                 break;
             }
         }
@@ -759,11 +1836,11 @@ void easings_float(t_easings *x, double f)
             //Expo(EaseIn)
             if (t==0) {
                 myval = b;
-                 
+                
                 break;
             } else {
                 myval = c * pow( 2, 10 * ( t/d - 1 )) + b;
-                 
+                
                 break;
             }
         }
@@ -771,11 +1848,11 @@ void easings_float(t_easings *x, double f)
             //Expo(EaseOut)
             if (t==d) {
                 myval = c+d;
-                 
+                
                 break;
             } else {
                 myval = c * (-pow(2, -10 * t/d) + 1) + b;
-                 
+                
                 break;
             }
         }
@@ -783,19 +1860,19 @@ void easings_float(t_easings *x, double f)
             //Expo(EaseInOut)
             if (t==0){
                 myval = b;
-                 
+                
                 break;
             } else if (t==d){
                 myval = b+c;
-                 
+                
                 break;
             } else if (( t /= d/2 ) < 1) {
                 myval = c/2 * pow( 2, 10 * (t - 1) ) + b;
-                 
+                
                 break;
             } else {
                 myval = c/2 * (-pow( 2, -10 * --t ) + 2) + b;
-                 
+                
                 break;
             }
         }
@@ -805,27 +1882,27 @@ void easings_float(t_easings *x, double f)
                 double tt = t * 2;
                 double cc = c / 2;
                 myval = cc * ( -pow( 2, -10 * tt/d ) + 1) + b;
-                 
+                
                 break;
             } else {
                 double tt = ( t * 2 )-d;
                 double bb = b + ( c / 2 );
                 double cc = c / 2;
                 myval = cc * pow(2, 10 * ( tt/d - 1 )) + bb;
-                 
+                
                 break;
             }
         }
         case(29):{
             //Back(EaseIn)
             myval = c * ( t /= d ) * t * (( ss + 1 ) * t - ss) + b;
-             
+            
             break;
         }
         case(30):{
             //Back(EaseOut)
             myval = c * (( t = t / d - 1 ) * t * (( ss + 1 ) * t + ss) + 1) + b;
-             
+            
             break;
         }
         case(31):{
@@ -833,12 +1910,12 @@ void easings_float(t_easings *x, double f)
             if ( (t/=(d/2)) < 1 ){
                 double s = ss; // < need to adjust for custom in future
                 myval = c / 2 * ( t * t * ((( s *= 1.525 ) + 1 ) * t - s)) + b;
-                 
+                
                 break;
             } else {
                 double s = ss; // < need to adjust for custom in future
                 myval = c / 2 * (( t -= 2 ) * t * ((( s *= 1.525 ) + 1 ) * t + s) + 2) + b;
-                 
+                
                 break;
             }
         }
@@ -848,14 +1925,14 @@ void easings_float(t_easings *x, double f)
                 double tt=t*2;
                 double cc=c/2;
                 myval = cc * (( tt = tt/d - 1 ) * tt * (( ss + 1 ) * tt + ss) + 1) + b;
-                 
+                
                 break;
             } else {
                 double tt = ( t * 2 ) - d;
                 double bb = b + c / 2;
                 double cc = c / 2;
                 myval = cc * ( tt /= d ) * tt * (( ss + 1 ) * tt - ss) + bb;
-                 
+                
                 break;
             }
         }
@@ -866,22 +1943,22 @@ void easings_float(t_easings *x, double f)
             if (( t /= d ) < ( 1/2.75 )){
                 double e = c * ( 7.5625 * t * t ) + b;
                 myval = c - e + b;
-                 
+                
                 break;
             } else if (t < (2/2.75)) {
                 double e = c * ( 7.5625 * ( t -= ( 1.5/2.75 )) * t + 0.75) + b;
                 myval = c - e + b;
-                 
+                
                 break;
             } else if (t < (2.5/2.75)) {
                 double e = c * ( 7.5625 * ( t -= (2.25/2.75) ) * t + 0.9375) + b;
                 myval = c - e + b;
-                 
+                
                 break;
             } else {
                 double e = c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
                 myval = c - e + b;
-                 
+                
                 break;
             }
         }
@@ -889,19 +1966,19 @@ void easings_float(t_easings *x, double f)
             //Bounce(EaseOut)
             if (( t /= d ) < (1/2.75)) {
                 myval = c * (7.5625 * t * t) + b;
-                 
+                
                 break;
             } else if (t < (2/2.75)) {
                 myval = c * (7.5625 * ( t -= (1.5/2.75)) * t + 0.75) + b;
-                 
+                
                 break;
             } else if (t < (2.5/2.75)) {
                 myval = c * (7.5625 * ( t -= (2.25/2.75)) * t + 0.9375) + b;
-                 
+                
                 break;
             } else {
                 myval = c*(7.5625*( t -= (2.625/2.75)) * t + 0.984375) + b;
-                 
+                
                 break;
             }
         }
@@ -914,41 +1991,41 @@ void easings_float(t_easings *x, double f)
                 if ((t/=d) < (1/2.75)){
                     double e = c * (7.5625 * t * t) + b;
                     myval = (c - e + b)*0.5 + b;
-                     
+                    
                     break;
                 } else if (t < (2/2.75)) {
                     double e = c * (7.5625 * ( t -= (1.5/2.75)) * t + 0.75) + b;
                     myval = (c - e + b)*0.5 + b;
-                     
+                    
                     break;
                 } else if (t < (2.5/2.75)) {
                     double e = c * (7.5625 * ( t -= (2.25/2.75)) * t + 0.9375) + b;
                     myval = (c - e + b)*0.5 + b;
-                     
+                    
                     break;
                 } else {
                     double e = c * (7.5625 * ( t -= (2.625/2.75)) * t + 0.984375) + b;
                     myval = (c - e + b) * 0.5 + b;
-                     
+                    
                     break;
                 }
             } else {
                 t = t * 2 - d;
                 if ((t/=d) < (1/2.75)) {
                     myval = ( c * (7.5625 * t * t) + b) * 0.5 + (c * 0.5) + b;
-                     
+                    
                     break;
                 } else if (t < (2/2.75)) {
                     myval = ( c * (7.5625 * ( t -= (1.5/2.75)) * t + 0.75) + b) * 0.5 + (c * 0.5) + b;
-                     
+                    
                     break;
                 } else if (t < (2.5/2.75)) {
                     myval = (c * (7.5625 * (t -= (2.25/2.75)) * t + 0.9375) + b) * 0.5 + (c * 0.5) + b;
-                     
+                    
                     break;
                 } else {
                     myval = (c * (7.5625 * (t -= (2.625/2.75)) * t + 0.984375) + b) * 0.5 + (c * 0.5) +b;
-                     
+                    
                     break;
                 }
             }
@@ -960,19 +2037,19 @@ void easings_float(t_easings *x, double f)
                 double cc=c/2;
                 if ((tt/=d) < (1/2.75)) {
                     myval = cc * (7.5625 * tt * tt) + b;
-                     
+                    
                     break;
                 } else if (tt < (2/2.75)) {
                     myval = cc * (7.5625 * (tt -= (1.5/2.75)) * tt + 0.75) + b;
-                     
+                    
                     break;
                 } else if (tt < (2.5/2.75)) {
                     myval = cc * (7.5625 * (tt -= (2.25/2.75)) * tt + 0.9375) + b;
-                     
+                    
                     break;
                 } else {
                     myval = cc * (7.5625*(tt -= (2.625/2.75)) * tt + 0.984375) + b;
-                     
+                    
                     break;
                 }
             } else {
@@ -984,35 +2061,35 @@ void easings_float(t_easings *x, double f)
                 if ((ttt/=d) < (1/2.75)){
                     double e = cc * (7.5625 * ttt * ttt) + bbb;
                     myval = cc - e + bb;
-                     
+                    
                     break;
                 } else if (ttt < (2/2.75)) {
                     double e = cc * ( 7.5625 * (ttt -= (1.5/2.75)) * ttt + 0.75) + bbb;
                     myval = cc - e + bb;
-                     
+                    
                     break;
                 } else if (ttt < (2.5/2.75)) {
                     double e = cc * (7.5625 * (ttt -= (2.25/2.75)) * ttt + 0.9375) + bbb;
                     myval = cc - e + bb;
-                     
+                    
                     break;
                 } else {
                     double e = cc * (7.5625 * (ttt -= (2.625/2.75)) * ttt + 0.984375) + bbb;
                     myval = cc - e + bb;
-                     
+                    
                     break;
                 }
-            }	
+            }
         }
         case(37):{
             //Elastic(EaseIn)
             if(t==0) {
                 myval = b;
-                 
+                
                 break;
             } else if((t/=d)==1) {
                 myval = b+c;
-                 
+                
                 break;
             } else {
                 double p = d * 0.3;
@@ -1020,7 +2097,7 @@ void easings_float(t_easings *x, double f)
                 double z = p/4;
                 double zz = a * pow(2,10 *( t -= 1 )) * sin((t * d - z) * (2 * M_PI) / p);
                 myval = -zz + b;
-                 
+                
                 break;
             }
         }
@@ -1028,11 +2105,11 @@ void easings_float(t_easings *x, double f)
             //Elastic(EaseOut)
             if(t==0) {
                 myval = b;
-                 
+                
                 break;
             } else if((t/=d)==1) {
                 myval = b+c;
-                 
+                
                 break;
             } else {
                 double p = d * 0.3;
@@ -1040,7 +2117,7 @@ void easings_float(t_easings *x, double f)
                 double z = p/4;
                 double zz = a * pow(2,-10 * t) * sin(( t * d - z ) * ( 2 * M_PI)/p);
                 myval = zz + c + b;
-                 
+                
                 break;
             }
         }
@@ -1048,11 +2125,11 @@ void easings_float(t_easings *x, double f)
             //Elastic(EaseInOut)
             if(t==0) {
                 myval = b;
-                 
+                
                 break;
             } else if((t/=d/2)==2) {
                 myval = b + c;
-                 
+                
                 break;
             } else {
                 double p = d * (0.3 * 1.5);
@@ -1060,11 +2137,11 @@ void easings_float(t_easings *x, double f)
                 double z = p / 4;
                 if(t < 1){
                     myval = -0.5 * (a * pow(2,10 * ( t -= 1 )) * sin( ( t * d - z ) * ( 2 * M_PI) / p )) + b;
-                     
+                    
                     break;
                 } else {
                     myval = a * pow(2,-10 * ( t -= 1 )) * sin( ( t * d - z ) * ( 2 * M_PI) / p ) * 0.5 + c + b;
-                     
+                    
                     break;
                 }
             }
@@ -1076,11 +2153,11 @@ void easings_float(t_easings *x, double f)
                 double cc = c / 2;
                 if(tt==0) {
                     myval = b;
-                     
+                    
                     break;
                 } else if((tt/=d)==1) {
                     myval = b+cc;
-                     
+                    
                     break;
                 } else {
                     double p = d * 0.3;
@@ -1088,7 +2165,7 @@ void easings_float(t_easings *x, double f)
                     double z = p/4;
                     double zz = a * pow( 2,-10 * tt ) * sin(( tt * d - z ) * ( 2 * M_PI )/p);
                     myval = zz + cc + b;
-                     
+                    
                     break;
                 }
             } else {
@@ -1097,11 +2174,11 @@ void easings_float(t_easings *x, double f)
                 double cc = c / 2;
                 if(t==0) {
                     myval = bb;
-                     
+                    
                     break;
                 } else if((tt/=d)==1) {
                     myval = bb+cc;
-                     
+                    
                     break;
                 } else {
                     double p = d * 0.3;
@@ -1109,10 +2186,10 @@ void easings_float(t_easings *x, double f)
                     double z = p/4;
                     double zz = a * pow( 2,10 * ( tt -= 1 )) * sin(( tt * d - z ) * ( 2 * M_PI ) / p );
                     myval = -zz + bb;
-                     
+                    
                     break;
                 }
-            }	
+            }
         }
         case(41):{
             //Blinn-Wyvill Approximation to the Raised Inverted Cosine
@@ -1125,18 +2202,18 @@ void easings_float(t_easings *x, double f)
             double fc = (22.0/9.0);
             
             myval = fa * t6 - fb * t4 + fc * t2;
-             
+            
             break;
         }
         case(42):{
             //Double-Cubic Seat
             if (t <= ga){
                 myval = gb - gb*pow(1-t/ga, 3.0);
-                 
+                
                 break;
             } else {
                 myval = gb + (1-gb)*pow((t-ga)/(1-ga), 3.0);
-                 
+                
                 break;
             }
         }
@@ -1145,11 +2222,11 @@ void easings_float(t_easings *x, double f)
             gb = 1.0 - gb; // reverse for intelligibility
             if (t <= ga){
                 myval = gb * t + (1-gb) * ga * (1 - pow(1 - t / ga, 3.0));
-                 
+                
                 break;
             } else {
                 myval = gb * t + (1-gb) * (ga + (1 - ga) * pow(( t - ga )/( 1 - ga), 3.0));
-                 
+                
                 break;
             }
         }
@@ -1158,11 +2235,11 @@ void easings_float(t_easings *x, double f)
             int p = 2 * gn + 1;
             if (t <= ga){
                 myval = gb - gb * pow(1-t/ga, p);
-                 
+                
                 break;
             } else {
                 myval = gb + (1 - gb) * pow((t - ga) / (1 - ga), p);
-                 
+                
                 break;
             }
         }
@@ -1172,11 +2249,11 @@ void easings_float(t_easings *x, double f)
                 // even polynomial
                 if (t <= 0.5){
                     myval = pow(2.0 * t, gn) / 2.0;
-                     
+                    
                     break;
                 } else {
                     myval = 1.0 - pow(2 * (t - 1), gn) / 2.0;
-                     
+                    
                     break;
                 }
             }
@@ -1184,11 +2261,11 @@ void easings_float(t_easings *x, double f)
                 // odd polynomial
                 if (t <= 0.5){
                     myval = pow(2.0 * t, gn) / 2.0;
-                     
+                    
                     break;
                 } else {
                     myval = 1.0 + pow(2.0 * (t - 1), gn) / 2.0;
-                     
+                    
                     break;
                 }
             }
@@ -1199,7 +2276,7 @@ void easings_float(t_easings *x, double f)
             double GB = (GA * (ga * ga) - gb) / ga;
             double y = GA * (t * t) - GB * (t);
             myval = fmin(1, fmax(0,y));
-             
+            
             break;
         }
         case(47):{
@@ -1208,13 +2285,13 @@ void easings_float(t_easings *x, double f)
                 // emphasis
                 double gga = 2.0 * (ga);
                 myval = pow(t, gga);
-                 
+                
                 break;
             } else {
                 // de-emphasis
                 double gga = 2.0 * (ga - 0.5);
                 myval = pow(t, 1.0 / (1 - gga));
-                 
+                
                 break;
             }
         }
@@ -1222,11 +2299,11 @@ void easings_float(t_easings *x, double f)
             //Double-Exponential Seat
             if (t <= 0.5){
                 myval = (pow(2.0 * t, 1 - ga)) / 2.0;
-                 
+                
                 break;
             } else {
                 myval = 1.0 - (pow(2.0 * (1.0 - t), 1 - ga)) / 2.0;
-                 
+                
                 break;
             }
         }
@@ -1235,11 +2312,11 @@ void easings_float(t_easings *x, double f)
             ga = 1.0 - ga; // reversed for sensible results
             if ( t <= 0.5){
                 myval = (pow(2.0 * t, 1.0 / ga)) / 2.0;
-                 
+                
                 break;
             } else {
                 myval = 1.0 - (pow(2.0 * (1.0 - t), 1.0 / ga)) / 2.0;
-                 
+                
                 break;
             }
         }
@@ -1250,30 +2327,30 @@ void easings_float(t_easings *x, double f)
             double GB = 1.0 / (1.0 + exp(ga));
             double GC = 1.0 / (1.0 + exp(0 - ga));
             myval = (GA - GB) / (GC - GB);
-             
+            
             break;
         }
         case(51):{
             //Circular Ease In
             myval = 1 - sqrt(1 - t * t);
-             
+            
             break;
         }
         case(52):{
             //Circular Ease Out
             myval = sqrt(1 - pow((1 - t), 2.0));
-             
+            
             break;
         }
         case(53):{
             //Double-Circular Seat
             if (t <= ga){
                 myval = sqrt(pow(ga,2.0) - pow((t-ga),2.0));
-                 
+                
                 break;
             } else {
                 myval = 1 - sqrt(pow((1-ga),2.0) - pow((t-ga),2.0));
-                 
+                
                 break;
             }
         }
@@ -1281,11 +2358,11 @@ void easings_float(t_easings *x, double f)
             //Double-Circular Sigmoid
             if (t <= ga){
                 myval = ga - sqrt(ga * ga - t * t);
-                 
+                
                 break;
             } else {
                 myval = ga + sqrt(pow((1 - ga),2.0) - pow((t - 1), 2.0));
-                 
+                
                 break;
             }
         }
@@ -1293,11 +2370,11 @@ void easings_float(t_easings *x, double f)
             //Double-Elliptic Seat
             if (t <= ga){
                 myval = (gb / ga) * sqrt(pow(ga, 2.0) - pow((t - ga), 2.0));
-                 
+                
                 break;
             } else {
                 myval = 1- ((1 - gb) / (1 - ga)) * sqrt(pow((1 - ga), 2.0) - pow((t - ga),2.0));
-                 
+                
                 break;
             }
         }
@@ -1305,11 +2382,11 @@ void easings_float(t_easings *x, double f)
             //Double-Elliptical Sigmoid
             if (t <= ga){
                 myval = gb * (1 - (sqrt(pow(ga, 2.0) - pow(t, 2.0)) / ga));
-                 
+                
                 break;
             } else {
                 myval = gb + ((1 - gb) / (1 - ga)) * sqrt(pow((1 - ga),2.0) - pow((t - 1),2.0));
-                 
+                
                 break;
             }
         }
@@ -1325,130 +2402,130 @@ void easings_float(t_easings *x, double f)
             double arcRadius;
             
             //computeFilletParameters (0,0, a,b, a,b, 1,1,  R);
-                double p1x = 0; double p1y = 0;
-                double p2x = ga; double p2y = gb;
-                double p3x = ga; double p3y = gb;
-                double p4x = 1; double p4y = 1;
-                double r = gd;
+            double p1x = 0; double p1y = 0;
+            double p2x = ga; double p2y = gb;
+            double p3x = ga; double p3y = gb;
+            double p4x = 1; double p4y = 1;
+            double r = gd;
             
-                double c1   = p2x * p1y - p1x * p2y;
-                double a1   = p2y - p1y;
-                double b1   = p1x - p2x;
-                double c2   = p4x * p3y - p3x * p4y;
-                double a2   = p4y - p3y;
-                double b2   = p3x - p4x;
-                if ((a1 * b2) == (a2 * b1)){  /* Parallel or coincident lines */
-                    return;
-                }
-                
-                double d1, d2;
-                double mPx, mPy;
-                mPx = (p3x + p4x)/2.0;
-                mPy = (p3y + p4y)/2.0;
+            double c1   = p2x * p1y - p1x * p2y;
+            double a1   = p2y - p1y;
+            double b1   = p1x - p2x;
+            double c2   = p4x * p3y - p3x * p4y;
+            double a2   = p4y - p3y;
+            double b2   = p3x - p4x;
+            if ((a1 * b2) == (a2 * b1)){  /* Parallel or coincident lines */
+                return;
+            }
             
-                    //d1 = linetopoint(a1,b1,c1,mPx,mPy);  /* Find distance p1p2 to p3 */\
-                
-                    // Return signed distance from line Ax + By + C = 0 to point P.
-                    // float linetopoint (float a, float b, float c, float ptx, float pty){
-                    //      float lp = 0.0;
-                    //      float d = sqrt((a*a)+(b*b));
-                    //      if (d != 0.0){
-                    //          lp = (a*ptx + b*pty + c)/d;
-                    //      }
-                    //      return lp;
-                    // }
+            double d1, d2;
+            double mPx, mPy;
+            mPx = (p3x + p4x)/2.0;
+            mPy = (p3y + p4y)/2.0;
             
-                    d1 = 0.0;
-                    double dd1 = sqrt((a1*a1)+(b1*b1));
-                    if (dd1 != 0.0){
-                        d1 = (a1*mPx + b1*mPy + c1)/dd1;
-                    }
+            //d1 = linetopoint(a1,b1,c1,mPx,mPy);  /* Find distance p1p2 to p3 */\
             
-                if (d1 == 0.0) {
-                    break;
-                }
+            // Return signed distance from line Ax + By + C = 0 to point P.
+            // float linetopoint (float a, float b, float c, float ptx, float pty){
+            //      float lp = 0.0;
+            //      float d = sqrt((a*a)+(b*b));
+            //      if (d != 0.0){
+            //          lp = (a*ptx + b*pty + c)/d;
+            //      }
+            //      return lp;
+            // }
             
-                mPx = (p1x + p2x)/2.0;
-                mPy = (p1y + p2y)/2.0;
+            d1 = 0.0;
+            double dd1 = sqrt((a1*a1)+(b1*b1));
+            if (dd1 != 0.0){
+                d1 = (a1*mPx + b1*mPy + c1)/dd1;
+            }
             
-                    //d2 = linetopoint(a2,b2,c2,mPx,mPy);  /* Find distance p3p4 to p2 */
+            if (d1 == 0.0) {
+                break;
+            }
             
-                    d2 = 0.0;
-                    double dd2 = sqrt((a2*a2)+(b2*b2));
-                    if (dd2 != 0.0){
-                        d2 = (a2*mPx + b2*mPy + c2)/dd2;
-                    }
+            mPx = (p1x + p2x)/2.0;
+            mPy = (p1y + p2y)/2.0;
             
-                if (d2 == 0.0) {
-                    break;
-                }
-                
-                double c1p, c2p, d;
-                double rr = r;
-                if (d1 <= 0.0) {
-                    rr= -rr;
-                }
-                c1p = c1 - rr*sqrt((a1*a1)+(b1*b1));  /* Line parallel l1 at d */
-                rr = r;
-                if (d2 <= 0.0){
-                    rr = -rr;
-                }
-                c2p = c2 - rr*sqrt((a2*a2)+(b2*b2));  /* Line parallel l2 at d */
-                d = (a1*b2)-(a2*b1);
-                
-                double pCx = (c2p*b1-c1p*b2)/d; /* Intersect constructed lines */
-                double pCy = (c1p*a2-c2p*a1)/d; /* to find center of arc */
-                double pAx = 0;
-                double pAy = 0;
-                double pBx = 0;
-                double pBy = 0;
-                double dP,cP;
-                
-                dP = (a1*a1) + (b1*b1);        /* Clip or extend lines as required */
-                if (dP != 0.0){
-                    cP = a1*pCy - b1*pCx;
-                    pAx = (-a1*c1 - b1*cP)/dP;
-                    pAy = ( a1*cP - b1*c1)/dP;
-                }
-                dP = (a2*a2) + (b2*b2);
-                if (dP != 0.0){
-                    cP = a2*pCy - b2*pCx;
-                    pBx = (-a2*c2 - b2*cP)/dP;
-                    pBy = ( a2*cP - b2*c2)/dP;
-                }
-                
-                double gv1x = pAx-pCx;
-                double gv1y = pAy-pCy;
-                double gv2x = pBx-pCx; 
-                double gv2y = pBy-pCy;
-                
-                double arcStart = (double) atan2(gv1y,gv1x); 
-                double arcAngle = 0.0;
-                double dd = (double) sqrt(((gv1x*gv1x)+(gv1y*gv1y)) * ((gv2x*gv2x)+(gv2y*gv2y)));
-                if (dd != (double) 0.0){
-                    arcAngle = (acos((gv1x*gv2x + gv1y*gv2y)/dd));
-                } 
-                double crossProduct = (gv1x*gv2y - gv2x*gv1y);
-                if (crossProduct < 0.0){ 
-                    arcStart -= arcAngle;
-                }
-                
-                double arc1 = arcStart;
-                double arc2 = arcStart + arcAngle;
-                if (crossProduct < 0.0){
-                    arc1 = arcStart + arcAngle;
-                    arc2 = arcStart;
-                }
-                
-                arcCenterX    = pCx;
-                arcCenterY    = pCy;
-                arcStartAngle = arc1;
-                arcEndAngle   = arc2;
-                arcRadius     = r;
-                arcStartX     = arcCenterX + arcRadius*cos(arcStartAngle);
-                arcStartY     = arcCenterY + arcRadius*sin(arcStartAngle);
-                arcEndX       = arcCenterX + arcRadius*cos(arcEndAngle);
-                arcEndY       = arcCenterY + arcRadius*sin(arcEndAngle);
+            //d2 = linetopoint(a2,b2,c2,mPx,mPy);  /* Find distance p3p4 to p2 */
+            
+            d2 = 0.0;
+            double dd2 = sqrt((a2*a2)+(b2*b2));
+            if (dd2 != 0.0){
+                d2 = (a2*mPx + b2*mPy + c2)/dd2;
+            }
+            
+            if (d2 == 0.0) {
+                break;
+            }
+            
+            double c1p, c2p, d;
+            double rr = r;
+            if (d1 <= 0.0) {
+                rr= -rr;
+            }
+            c1p = c1 - rr*sqrt((a1*a1)+(b1*b1));  /* Line parallel l1 at d */
+            rr = r;
+            if (d2 <= 0.0){
+                rr = -rr;
+            }
+            c2p = c2 - rr*sqrt((a2*a2)+(b2*b2));  /* Line parallel l2 at d */
+            d = (a1*b2)-(a2*b1);
+            
+            double pCx = (c2p*b1-c1p*b2)/d; /* Intersect constructed lines */
+            double pCy = (c1p*a2-c2p*a1)/d; /* to find center of arc */
+            double pAx = 0;
+            double pAy = 0;
+            double pBx = 0;
+            double pBy = 0;
+            double dP,cP;
+            
+            dP = (a1*a1) + (b1*b1);        /* Clip or extend lines as required */
+            if (dP != 0.0){
+                cP = a1*pCy - b1*pCx;
+                pAx = (-a1*c1 - b1*cP)/dP;
+                pAy = ( a1*cP - b1*c1)/dP;
+            }
+            dP = (a2*a2) + (b2*b2);
+            if (dP != 0.0){
+                cP = a2*pCy - b2*pCx;
+                pBx = (-a2*c2 - b2*cP)/dP;
+                pBy = ( a2*cP - b2*c2)/dP;
+            }
+            
+            double gv1x = pAx-pCx;
+            double gv1y = pAy-pCy;
+            double gv2x = pBx-pCx;
+            double gv2y = pBy-pCy;
+            
+            double arcStart = (double) atan2(gv1y,gv1x);
+            double arcAngle = 0.0;
+            double dd = (double) sqrt(((gv1x*gv1x)+(gv1y*gv1y)) * ((gv2x*gv2x)+(gv2y*gv2y)));
+            if (dd != (double) 0.0){
+                arcAngle = (acos((gv1x*gv2x + gv1y*gv2y)/dd));
+            }
+            double crossProduct = (gv1x*gv2y - gv2x*gv1y);
+            if (crossProduct < 0.0){
+                arcStart -= arcAngle;
+            }
+            
+            double arc1 = arcStart;
+            double arc2 = arcStart + arcAngle;
+            if (crossProduct < 0.0){
+                arc1 = arcStart + arcAngle;
+                arc2 = arcStart;
+            }
+            
+            arcCenterX    = pCx;
+            arcCenterY    = pCy;
+            arcStartAngle = arc1;
+            arcEndAngle   = arc2;
+            arcRadius     = r;
+            arcStartX     = arcCenterX + arcRadius*cos(arcStartAngle);
+            arcStartY     = arcCenterY + arcRadius*sin(arcStartAngle);
+            arcEndX       = arcCenterX + arcRadius*cos(arcEndAngle);
+            arcEndY       = arcCenterY + arcRadius*sin(arcEndAngle);
             //End compute parameters
             
             double tt = 0;
@@ -1457,23 +2534,23 @@ void easings_float(t_easings *x, double f)
             if (t <= arcStartX){
                 tt = t / arcStartX;
                 myval = tt * arcStartY;
-                 
+                
                 break;
                 
             } else if (t >= arcEndX){
                 tt = (t - arcEndX)/(1 - arcEndX);
                 myval = arcEndY + tt * (1 - arcEndY);
-                 
+                
                 break;
                 
             } else {
                 if (t >= arcCenterX){
                     myval = arcCenterY - sqrt(pow(arcRadius,2.0) - pow((t-arcCenterX),2.0));
-                     
+                    
                     break;
                 } else{
                     myval = arcCenterY + sqrt(pow(arcRadius, 2.0) - pow((t-arcCenterX),2.0));
-                     
+                    
                     break;
                 }
             }
@@ -1482,20 +2559,7 @@ void easings_float(t_easings *x, double f)
         case(58):{
             //Circular Arc Through a Given Point
             //Adapted from Paul Bourke
-            double m_Centerx;
-            double m_Centery;
-            double m_dRadius;
-            
-            t = fmin(1.0-epsilon, fmax(0.0+epsilon, t));
-            double pt1x = 0;
-            double pt1y = 0;
-            double pt2x = ga;
-            double pt2y = gb;
-            double pt3x = 1;
-            double pt3y = 1;
-            
-            
-            
+            myval = circularArcThroughAPoint (t, ga, gb);
             break;
         }
         case(59):{
@@ -1514,7 +2578,7 @@ void easings_float(t_easings *x, double f)
             double om2a = 1 - 2 * ga;
             double gt = (sqrt(ga * ga + om2a * t) - ga) / om2a;
             myval = (1 - 2 * gb) * (gt * gt) + (2 * gb) * gt;
-             
+            
             break;
         }
         case(60):{
@@ -1558,14 +2622,14 @@ void easings_float(t_easings *x, double f)
             }
             //float y = yFromT (currentt,  E,F,G,H);
             myval = E * (currentt * currentt * currentt) + F * (currentt * currentt) + G * currentt + H;
-             
+            
             break;
         }
         case(61):{
             //Cubic Bezier (Nearly) Through Two Given Points
             //The method is adapted from Don Lancaster
             //https://www.tinaja.com/text/bezmath.html
-
+            
             double x0 = 0;
             double y0 = 0;
             double x4 = ga;
@@ -1604,7 +2668,7 @@ void easings_float(t_easings *x, double f)
             x2 = fmax(0+epsilon, fmin(1-epsilon, x2));
             
             //Cubic Bezier function:
-        
+            
             double y0a = 0.00; // initial y
             double x0a = 0.00; // initial x
             double y1a = y1;    // 1st influence y
@@ -1640,15 +2704,153 @@ void easings_float(t_easings *x, double f)
             //float y = yFromT (currentt,  E,F,G,H);
             myval = E * (currentt * currentt * currentt) + F * (currentt * currentt) + G * currentt + H;
             myval = fmax(0, fmin(1, myval));
-             
+            
             break;
         }
             
     } // closed paren: (switch)
     
     
-    outlet_float(x->outlet, myval);
+    outlet_float(x->outlet1, myval);
 }
+
+//-----------------------------------------------------
+
+
+
+double circularArcThroughAPoint (double x, double a, double b){
+    
+    //---------------------------------------------------------
+    // Adapted from Paul Bourke
+    double epsilon = 0.00001;
+    double min_param_a = 0.0 + epsilon;
+    double max_param_a = 1.0 - epsilon;
+    double min_param_b = 0.0 + epsilon;
+    double max_param_b = 1.0 - epsilon;
+    a = fmin(max_param_a, fmax(min_param_a, a));
+    b = fmin(max_param_b, fmax(min_param_b, b));
+    x = fmin(1.0-epsilon, fmax(0.0+epsilon, x));
+    
+    double pt1x = 0;
+    double pt1y = 0;
+    double pt2x = a;
+    double pt2y = b;
+    double pt3x = 1;
+    double pt3y = 1;
+    
+    if      (!IsPerpendicular(pt1x,pt1y, pt2x,pt2y, pt3x,pt3y))
+        calcCircleFrom3Points (pt1x,pt1y, pt2x,pt2y, pt3x,pt3y);
+    else if (!IsPerpendicular(pt1x,pt1y, pt3x,pt3y, pt2x,pt2y))
+        calcCircleFrom3Points (pt1x,pt1y, pt3x,pt3y, pt2x,pt2y);
+    else if (!IsPerpendicular(pt2x,pt2y, pt1x,pt1y, pt3x,pt3y))
+        calcCircleFrom3Points (pt2x,pt2y, pt1x,pt1y, pt3x,pt3y);
+    else if (!IsPerpendicular(pt2x,pt2y, pt3x,pt3y, pt1x,pt1y))
+        calcCircleFrom3Points (pt2x,pt2y, pt3x,pt3y, pt1x,pt1y);
+    else if (!IsPerpendicular(pt3x,pt3y, pt2x,pt2y, pt1x,pt1y))
+        calcCircleFrom3Points (pt3x,pt3y, pt2x,pt2y, pt1x,pt1y);
+    else if (!IsPerpendicular(pt3x,pt3y, pt1x,pt1y, pt2x,pt2y))
+        calcCircleFrom3Points (pt3x,pt3y, pt1x,pt1y, pt2x,pt2y);
+    else {
+        return 0;
+    }
+    
+    // constrain
+    if ((m_Centerx > 0) && (m_Centerx < 1)){
+        if (a < m_Centerx){
+            m_Centerx = 1;
+            m_Centery = 0;
+            m_dRadius = 1;
+        } else {
+            m_Centerx = 0;
+            m_Centery = 1;
+            m_dRadius = 1;
+        }
+    }
+    
+    double y = 0;
+    if (x >= m_Centerx){
+        y = m_Centery - sqrt(pow(m_dRadius, 2.0) - pow(x-m_Centerx, 2.0));
+    } else {
+        y = m_Centery + sqrt(pow(m_dRadius, 2.0) - pow(x-m_Centerx, 2.0));
+    }
+    return y;
+}
+
+//----------------------
+Boolean IsPerpendicular(
+                        double pt1x, double pt1y,
+                        double pt2x, double pt2y,
+                        double pt3x, double pt3y)
+{
+    // Check the given point are perpendicular to x or y axis
+    double yDelta_a = pt2y - pt1y;
+    double xDelta_a = pt2x - pt1x;
+    double yDelta_b = pt3y - pt2y;
+    double xDelta_b = pt3x - pt2x;
+    double epsilon = 0.000001;
+    
+    // checking whether the line of the two pts are vertical
+    if (fabs(xDelta_a) <= epsilon && fabs(yDelta_b) <= epsilon){
+        return false;
+    }
+    if (fabs(yDelta_a) <= epsilon){
+        return true;
+    }
+    else if (fabs(yDelta_b) <= epsilon){
+        return true;
+    }
+    else if (fabs(xDelta_a)<= epsilon){
+        return true;
+    }
+    else if (fabs(xDelta_b)<= epsilon){
+        return true;
+    }
+    else return false;
+}
+
+//--------------------------
+void calcCircleFrom3Points (
+                            double pt1x, double pt1y,
+                            double pt2x, double pt2y,
+                            double pt3x, double pt3y)
+{
+    double yDelta_a = pt2y - pt1y;
+    double xDelta_a = pt2x - pt1x;
+    double yDelta_b = pt3y - pt2y;
+    double xDelta_b = pt3x - pt2x;
+    double epsilon = 0.000001;
+    
+    if (fabs(xDelta_a) <= epsilon && fabs(yDelta_b) <= epsilon){
+        m_Centerx = 0.5 * (pt2x + pt3x);
+        m_Centery = 0.5 * (pt1y + pt2y);
+        m_dRadius = sqrt(pow(m_Centerx-pt1x, 2.0) + pow(m_Centery-pt1y, 2.0));
+        return;
+    }
+    
+    // IsPerpendicular() assure that xDelta(s) are not zero
+    double aSlope = yDelta_a / xDelta_a;
+    double bSlope = yDelta_b / xDelta_b;
+    if (fabs(aSlope-bSlope) <= epsilon){
+        // checking whether the given points are colinear.
+        return;
+    }
+    
+    // calc center
+    m_Centerx = (
+                 aSlope * bSlope * (pt1y - pt3y) +
+                 bSlope * (pt1x + pt2x) -
+                 aSlope * (pt2x+pt3x) )
+    /(2 * (bSlope-aSlope) );
+    m_Centery = -1 * (m_Centerx - (pt1x+pt2x)/2)/aSlope +  (pt1y+pt2y)/2;
+    m_dRadius = sqrt(pow(m_Centerx-pt1x, 2.0) + pow(m_Centery-pt1y, 2.0));
+}
+
+
+
+
+
+
+
 
 void easings_ft1(t_easings *x, double ga)
 {
